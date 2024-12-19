@@ -1,8 +1,3 @@
-
-// export default function Page() {
-  //   return <SignUp />;
-  // }
-  
 import React from 'react'
 import { SignUp } from "@clerk/nextjs";
 
