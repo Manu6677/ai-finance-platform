@@ -37,3 +37,11 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 
 ----------------------------------------------NOTES--------------------------------------------------------------------------------
+
+0) Create while application flow on paper with breakdown of component as pages and PRISMA WORKING ALSO SYNC WITH DATABASE AND SPABASE
+1) Layout of Dashboard bit different why?
+2) Component create-account-drawer, how it is written and what is that as a child and useState and prop={open}.
+3) why schema of the form written in the lib folder and why it is inside the app folder
+4) ...register('name')} what connection it is doing here in the input field - create-account-drawer compo
+5) why we wrote onValueChange and how it works, what is defaultValue, why id='type' wrote - create-account-drawer compo
+6) why to give id also in the <Switch /> ui component of shadcn
