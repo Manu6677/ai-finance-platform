@@ -1,12 +1,12 @@
 "use server";
-import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/dist/types/server";
+import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-
+import { db } from "@/lib/prisma";
+import { toast } from "sonner";
 
 const serializeTransaction = (obj)=>{
     const serialized = {...obj};
-
+    
     if(obj.balance){
         serialized.balance = obj.balance.toNumber();
     }
@@ -15,7 +15,8 @@ const serializeTransaction = (obj)=>{
 export async function createAccount(data) {
   try {
     const { userId } = await auth();
-    if (!userId) { return console.log("Unauthorized user"); }
+    console.log(userId, 'userId server actions');
+    if (!userId) { return toast.error('Invalid Credentials') }
 
     const user = await db.user.findUnique({
       where: { clerkUserId: userId },
@@ -24,7 +25,10 @@ export async function createAccount(data) {
     if (!user) { console.log('User not found'); }
 
     // convert balance to float before saving
+    console.log(data.balance, typeof data.balance, 'data.balance server actions');
     const balanceFloat = parseFloat(data.balance);
+    console.log(balanceFloat, typeof balanceFloat, 'balanceFloat server actions');
+
     if(isNaN(balanceFloat)){
         throw new Error('Invalid balance amount');
     }
@@ -44,6 +48,7 @@ export async function createAccount(data) {
         });
     }
 
+    // console.log(...data);
     const account = await db.account.create({
         data: {
             ...data,
