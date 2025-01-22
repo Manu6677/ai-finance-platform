@@ -102,17 +102,19 @@ enum TransactionStatus {
 
 /*
 
+--> uuid => universal unique identifiers.
+
 The @@index directive in Prisma creates database indexes for specific fields to optimize query performance. Let’s focus on the two indexes in the Transaction model:
 
 @@index([userId]): Optimizes queries filtering by the userId field.
 @@index([accountId]): Optimizes queries filtering by the accountId field.
 
-. How It Works
-@@index([userId])
-This creates an index on the userId column.
-When querying for all transactions by a specific user, the database uses the index to quickly locate matching rows.
-@@index([accountId])
-This creates an index on the accountId column.
-When querying for all transactions associated with a specific account, the index speeds up the process.
+How It Works
+ -> @@index([userId])
+ -> This creates an index on the userId column.
+ -> When querying for all transactions by a specific user, the database uses the index to quickly locate matching rows.
+ -> @@index([accountId])
+ -> This creates an index on the accountId column.
+ -> When querying for all transactions associated with a specific account, the index speeds up the process.
 
 */

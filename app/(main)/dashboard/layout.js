@@ -16,3 +16,8 @@ const DashboardLayout = () => {
 }
 
 export default DashboardLayout
+
+/*   
+  Suspense we used If we are making an API call in the Dashboard page component.
+   -> To show the loader until the reponse did not came.
+*/

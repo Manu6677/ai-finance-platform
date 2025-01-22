@@ -59,10 +59,33 @@ export async function createAccount(data) {
     });
 
     const serializedAccount = serializeTransaction(account);
-    revalidatePath("/dashboard")
+    revalidatePath("/dashboard") //Functions like revalidatePath for cache management are server-side only and cannot run in a client environment.
+    //Authentication using auth() from @clerk/nextjs/server involves sensitive operations like accessing the user's userId. This should only occur on the server for security.
+   //The Prisma database operations (db.user.findUnique, db.account.create, etc.) interact with the database directly, which should not be exposed to the client to avoid vulnerabilities like SQL injection.
     return {success: true, data: serializedAccount}
 
   } catch (error) {
     throw new Error(error.message);
   }
 }
+
+
+/* 
+Flow Diagram
+1) User Action: The user submits a form to create a new account.
+2) Authentication: auth() ensures the user is logged in.
+3) Validation:
+     Validates the balance value.
+      Checks if the user exists.
+4) Logic:
+6) Fetches existing accounts.
+7) Determines if the account should be the default.
+9) Updates existing default accounts (if necessary).
+10) Database:
+     Creates the new account with provided data.
+11) Response:
+   Revalidates the dashboard.
+   Returns success or throws an error.
+
+
+*/

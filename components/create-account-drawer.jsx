@@ -184,3 +184,11 @@ const CreareAccountDrawer = ({ children }) => {
 };
 
 export default CreareAccountDrawer;
+
+
+/*
+Key Points:
+ 1) --> register('name'): Registers the field with the form state.
+ 2) {...register('name')}: Spreads the necessary props (onChange, onBlur, value, etc.) 
+     into the input element to manage the form state seamlessly. 
+*/
