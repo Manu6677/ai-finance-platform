@@ -3,18 +3,20 @@ import { toast } from "sonner";
 
 const useFetch = (cb) => {
 
+    console.log('callback it is', cb);
+
     const [data, setData] = useState(undefined);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
     const fn = async(...args)=>{
+        console.log('Arguments:', args); 
         setLoading(true);
         setError(null);
 
         try {            
-            console.log(...args);
-            const response = await cb(...args); 
-            console.log(response);
+            const response = await cb(...args); // Executes `createAccount` with form data
+            console.log('API Response:', response); 
             setData(response);
             setError(null);
             

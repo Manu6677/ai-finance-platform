@@ -48,6 +48,7 @@ const CreareAccountDrawer = ({ children }) => {
     })
 
     const onSubmit = async (data)=>{
+      console.log('Form Data:', data);
       createAccountFn(data)
     } 
 

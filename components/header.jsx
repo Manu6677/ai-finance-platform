@@ -46,9 +46,9 @@ const Header = async() => {
                 avatarBox: 'w-10 h-10',
               },
             }}>
-              <Button variant="outline">Logout</Button>
+             
             </UserButton>
-          </SignedIn>
+          </SignedIn>          
       </div>
       </nav>
     </header>

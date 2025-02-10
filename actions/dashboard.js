@@ -6,10 +6,18 @@ import { toast } from "sonner";
 
 const serializeTransaction = (obj)=>{
     const serialized = {...obj};
+
+    console.log('serialized', serialized);
     
     if(obj.balance){
         serialized.balance = obj.balance.toNumber();
     }
+
+    if(obj.amount){
+      serialized.amount = obj.amount.toNumber();
+  }
+
+  return serialized;
 }
 
 export async function createAccount(data) {
@@ -47,7 +55,7 @@ export async function createAccount(data) {
             data: {isDefault: false },
         });
     }
-
+    console.log('Received Data:', data);
     // console.log(...data);
     const account = await db.account.create({
         data: {
@@ -62,12 +70,83 @@ export async function createAccount(data) {
     revalidatePath("/dashboard") //Functions like revalidatePath for cache management are server-side only and cannot run in a client environment.
     //Authentication using auth() from @clerk/nextjs/server involves sensitive operations like accessing the user's userId. This should only occur on the server for security.
    //The Prisma database operations (db.user.findUnique, db.account.create, etc.) interact with the database directly, which should not be exposed to the client to avoid vulnerabilities like SQL injection.
+
+   console.log('Created Account:', account);
     return {success: true, data: serializedAccount}
 
   } catch (error) {
     throw new Error(error.message);
   }
 }
+
+export async function getUserAccounts() {
+  
+  const { userId } = await auth();
+  if(!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: {clerkUserId: userId}
+  })
+ 
+  if(!user) throw new Error("User Not Found");
+
+  try {
+
+     const accounts = await db.account.findMany({
+      where: { userId: user.id },
+      orderBy: {createdAt: "desc"},
+      include: {
+        _count:{
+          select: {
+            transactions: true,
+          },
+        },
+      },
+    })
+    
+  const serializedAccounts = accounts.map(serializeTransaction);
+    
+  return serializedAccounts; 
+    
+  } catch (error) {
+    console.log(error.message);
+    throw new Error("Failed to fetch user accounts");
+  }
+}
+
+// export async function getUserAccounts() {
+//   const { userId } = await auth();
+//   if (!userId) throw new Error("Unauthorized");
+
+//   const user = await db.user.findUnique({
+//     where: { clerkUserId: userId },
+//   });
+
+//   if (!user) {
+//     throw new Error("User not found");
+//   }
+
+//   try {
+//     const accounts = await db.account.findMany({
+//       where: { userId: user.id },
+//       orderBy: { createdAt: "desc" },
+//       include: {
+//         _count: {
+//           select: {
+//             transactions: true,
+//           },
+//         },
+//       },
+//     });
+
+//     // Serialize accounts before sending to client
+//     const serializedAccounts = accounts.map(serializeTransaction);
+
+//     return serializedAccounts;
+//   } catch (error) {
+//     console.error(error.message);
+//   }
+// }
 
 
 /* 
@@ -86,6 +165,4 @@ Flow Diagram
 11) Response:
    Revalidates the dashboard.
    Returns success or throws an error.
-
-
 */
