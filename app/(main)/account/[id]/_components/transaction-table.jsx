@@ -27,11 +27,20 @@ import {
 } from "@/components/ui/tooltip";
 import { categoryColors } from "@/data/categories";
 import { format } from "date-fns";
-import { Clock, MoreHorizontal, RefreshCcw } from "lucide-react";
-import { useRouter } from "next/router";
+import {
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  MoreHorizontal,
+  RefreshCcw,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const TransactionTable = ({ transaction }) => {
   const filteredAndSortedTransaction = transaction;
+  console.log(filteredAndSortedTransaction);
+  const router = useRouter();
 
   const recuringIntervals = {
     MONTHLY: "Monthly",
@@ -39,8 +48,40 @@ const TransactionTable = ({ transaction }) => {
     DAILY: "Daily",
   };
 
-  // const router = useRouter();
-  const handleSort = () => {};
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [sortConfig, setSortConfig] = useState({
+    field: "date",
+    direction: "desc",
+  });
+
+  console.log("selectedIds", selectedIds);
+
+  const handleSort = (field) => {
+    console.log("field", field);
+    console.log(setSortConfig);
+    setSortConfig((current) => ({
+      field,
+      direction:
+        current.field === field && current.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const handleSelectAll = () => {
+    console.log("handleSelectAll called");
+    setSelectedIds((current) =>
+      current.length === filteredAndSortedTransaction.length
+        ? []
+        : filteredAndSortedTransaction.map((t) => t.id)
+    );
+  };
+
+  const handleSelect = (id) => {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -52,26 +93,57 @@ const TransactionTable = ({ transaction }) => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">
-                <Checkbox />
+                <Checkbox
+                  onCheckedChange={handleSelectAll}
+                  checked={
+                    selectedIds.length ===
+                      filteredAndSortedTransaction.length &&
+                    filteredAndSortedTransaction.length > 0
+                  }
+                />
               </TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => handleSort("date")}
               >
-                <div className="flex items-center">Date</div>
+                <div className="flex items-center">
+                  Date{" "}
+                  {sortConfig.field === "date" &&
+                  sortConfig.direction === "asc" ? (
+                    <ChevronUp className="ml-1 h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  )}
+                </div>
               </TableHead>
               <TableHead>Discription</TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => handleSort("category")}
               >
-                <div className="flex items-center">Category</div>
+                <div className="flex items-center">
+                  Category{" "}
+                  {sortConfig.field === "category" &&
+                  sortConfig.direction === "asc" ? (
+                    <ChevronUp className="ml-1 h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  )}
+                </div>
               </TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => handleSort("amount")}
               >
-                <div className="flex items-center justify-end">Amount</div>
+                <div className="flex items-center justify-end">
+                  Amount{" "}
+                  {sortConfig.field === "amount" &&
+                  sortConfig.direction === "asc" ? (
+                    <ChevronUp className="ml-1 h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  )}
+                </div>
               </TableHead>
               <TableHead className="">Recurring</TableHead>
               <TableHead className="w-[50px]" />
@@ -91,7 +163,10 @@ const TransactionTable = ({ transaction }) => {
               filteredAndSortedTransaction?.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell className="font-medium">
-                    <Checkbox />
+                    <Checkbox
+                      onCheckedChange={() => handleSelect(transaction.id)}
+                      checked={selectedIds?.includes(transaction.id)}
+                    />
                   </TableCell>
                   <TableCell>
                     {format(new Date(transaction.date), "PP")}
@@ -157,13 +232,20 @@ const TransactionTable = ({ transaction }) => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem
-                        // onClick={router.push(
-                        //   `/transaction/create?edit${transaction.id}`
-                        // )}
+                          onClick={() =>
+                            router.push(
+                              `/transaction/create?edit=${transaction.id}`
+                            )
+                          }
                         >
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          //  onClick={() => deleteFn([transaction.id])}
+                        >
+                          Delete
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
