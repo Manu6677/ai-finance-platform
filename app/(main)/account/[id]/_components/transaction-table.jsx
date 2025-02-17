@@ -1,4 +1,5 @@
 "use client";
+import { bulkDeleteTransactions } from "@/actions/account";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,6 +35,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { categoryColors } from "@/data/categories";
+import useFetch from "@/hooks/fetch";
 import { format } from "date-fns";
 import {
   ChevronDown,
@@ -46,7 +48,9 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { BarLoader } from "react-spinners";
+import { toast } from "sonner";
 
 const TransactionTable = ({ transaction }) => {
   // const filteredAndSortedTransaction = transaction;
@@ -68,8 +72,59 @@ const TransactionTable = ({ transaction }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [recurringFilter, setRecurringFilter] = useState("");
-  console.log("recurringFilter", recurringFilter);
-  console.log("typeFilter", typeFilter);
+
+  const {
+    data: deleted,
+    loading: deleteLoading,
+    fn: deleteFn,
+    error,
+  } = useFetch(bulkDeleteTransactions);
+
+  const handleBulkDelete = () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete these ${selectedIds.length} transactions`
+      )
+    ) {
+      return;
+    }
+    deleteFn(selectedIds);
+  };
+
+  useEffect(() => {
+    if (deleted && !deleteLoading) {
+      toast.success("Transaction Deleted Successfully");
+    }
+  }, [deleted, deleteLoading]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "failed to create a new account");
+    }
+  }, [error]);
+
+  // const {
+  //   loading: deleteLoading,
+  //   fn: deleteFn,
+  //   data: deleted,
+  // } = useFetch(bulkDeleteTransactions);
+
+  // const handleBulkDelete = async () => {
+  //   if (
+  //     !window.confirm(
+  //       `Are you sure you want to delete ${selectedIds.length} transactions?`
+  //     )
+  //   )
+  //     return;
+
+  //   deleteFn(selectedIds);
+  // };
+
+  // useEffect(() => {
+  //   if (deleted && !deleteLoading) {
+  //     toast.error("Transactions deleted successfully");
+  //   }
+  // }, [deleted, deleteLoading]);
 
   const filteredAndSortedTransaction = useMemo(() => {
     let result = [...transaction];
@@ -95,9 +150,9 @@ const TransactionTable = ({ transaction }) => {
       result = result.filter((transaction) => transaction.type === typeFilter);
     }
 
+    // Apply sorting
     result.sort((a, b) => {
       let comparison = 0;
-      //sorting
       switch (sortConfig.field) {
         case "date":
           comparison = new Date(a.date) - new Date(b.date);
@@ -105,23 +160,20 @@ const TransactionTable = ({ transaction }) => {
         case "amount":
           comparison = a.amount - b.amount;
           break;
-
         case "category":
           comparison = a.category.localeCompare(b.category);
           break;
-
         default:
           comparison = 0;
       }
+
       return sortConfig.direction === "asc" ? comparison : -comparison;
     });
 
     return result;
-  }, [searchTerm, typeFilter, recurringFilter, selectedIds]);
+  }, [searchTerm, typeFilter, recurringFilter, selectedIds, sortConfig]);
 
   const handleSort = (field) => {
-    console.log("field", field);
-    console.log(setSortConfig);
     setSortConfig((current) => ({
       field,
       direction:
@@ -145,7 +197,7 @@ const TransactionTable = ({ transaction }) => {
         : [...current, id]
     );
   };
-  const handleBulkDelete = () => {};
+
   const handleClearFilters = () => {
     setSearchTerm("");
     setTypeFilter("");
@@ -155,6 +207,9 @@ const TransactionTable = ({ transaction }) => {
 
   return (
     <div className="space-y-4">
+      {deleteLoading && (
+        <BarLoader className="mt-4" width={"100%"} color="#9333ea" />
+      )}
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -192,7 +247,7 @@ const TransactionTable = ({ transaction }) => {
             <div className="flex items-center gap-2">
               <Button variant="destructive" onClick={handleBulkDelete}>
                 <Trash className="h-4 w-4 mr-2" />
-                Delete ({selectedIds.length})
+                Delete tt({selectedIds.length})
               </Button>
             </div>
           )}
@@ -360,7 +415,7 @@ const TransactionTable = ({ transaction }) => {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          //  onClick={() => deleteFn([transaction.id])}
+                          onClick={() => deleteFn([transaction.id])}
                         >
                           Delete
                         </DropdownMenuItem>

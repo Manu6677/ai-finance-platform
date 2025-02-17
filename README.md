@@ -193,3 +193,7 @@ Read sorting how it is work, why not working
 Read useMemo hook working reallife example how it works, duplicate the transaction still work why?
 Read about the Difference between the, setFilter((value)=>handleFilter(value)), setFilter(handleFilter)
  -> why to use value={filter} what is the need of it why it is required
+
+ LEFT => Not rendering on real time, UI after deleted a record
+ If the API Fails why not error useEffect works?
+ Resolve Bug to delete many transactions -> after resolving bug see that why different fn call use for delete transaction one with deleteFn and other bulkDelete

@@ -1,4 +1,4 @@
-"use server"
+"use server";
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
@@ -28,7 +28,7 @@ export async function updateDefaultAccount(accountId) {
     }
 
     const user = await db.user.findUnique({
-      where: {clerkUserId: userId },
+      where: { clerkUserId: userId },
     });
 
     if (!user) {
@@ -37,28 +37,26 @@ export async function updateDefaultAccount(accountId) {
 
     // First, unset any existing default account
     await db.account.updateMany({
-      where: {userId: user.id, isDefault: true},
-      data:{
+      where: { userId: user.id, isDefault: true },
+      data: {
         isDefault: false,
       },
     });
 
     // Then set the new default account
     const account = await db.account.update({
-      where: {id: accountId, userId: user.id},
-      data: {isDefault: true},
+      where: { id: accountId, userId: user.id },
+      data: { isDefault: true },
     });
-    
-    revalidatePath("/dashboard");
-    return {success: true, data: serializeTransaction(account)}
 
+    revalidatePath("/dashboard");
+    return { success: true, data: serializeTransaction(account) };
   } catch (error) {
-    return {success: false, error: error.message}
+    return { success: false, error: error.message };
   }
 }
 
-export async function getAccountWithTransactions(accountId){
-
+export async function getAccountWithTransactions(accountId) {
   try {
     const { userId } = await auth();
 
@@ -67,7 +65,7 @@ export async function getAccountWithTransactions(accountId){
     }
 
     const user = await db.user.findUnique({
-      where: {clerkUserId: userId },
+      where: { clerkUserId: userId },
     });
 
     if (!user) {
@@ -75,25 +73,158 @@ export async function getAccountWithTransactions(accountId){
     }
 
     const account = await db.account.findUnique({
-      where: {id: accountId, userId: user.id},
+      where: { id: accountId, userId: user.id },
       include: {
-        transactions:{  
-          orderBy: {date: "desc"},
-         },
-         _count: {
-          select: {transactions: true},
-        }
+        transactions: {
+          orderBy: { date: "desc" },
+        },
+        _count: {
+          select: { transactions: true },
+        },
       },
-    })
-    console.log('account server', account);
+    });
+    console.log("account server", account);
 
-    if(!account) return null;
+    if (!account) return null;
 
-    return {...serializeTransaction(account),
-      transactions: account.transactions.map(serializeTransaction)
-    }
-    
+    return {
+      ...serializeTransaction(account),
+      transactions: account.transactions.map(serializeTransaction),
+    };
   } catch (error) {
-    
+    return { success: false, error: error.message };
   }
 }
+
+export async function bulkDeleteTransactions(transactionIds) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      throw new Error("Unauthorized User");
+    }
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+      throw new Error("User Not Found");
+    }
+
+    console.log("transactionIds", transactionIds);
+
+    const transactions = await db.transaction.findMany({
+      where: {
+        id: { in: transactionIds },
+        userId: user.id,
+      },
+    });
+
+    console.log("transaction", transactions);
+
+    const accountBalanceChanges = transactions.reduce((acc, transaction) => {
+      const change =
+        transaction.type === "EXPENSE"
+          ? transaction.amount
+          : -transaction.amount;
+      acc[transaction.accountId] = (acc[transaction.accountId] || 0) + change;
+      return acc;
+    }, {});
+
+    console.log("accountBalanceChanges", accountBalanceChanges);
+
+    // delete transactions and update account balance in transactions
+
+    await db.$transaction(async (tx) => {
+      // delete transactions
+      await tx.transaction.deleteMany({
+        where: {
+          id: { in: transactionIds },
+          userId: user.id,
+        },
+      });
+
+      for (const [accountId, balanceChange] of Object.entries(
+        accountBalanceChanges
+      )) {
+        await tx.account.update({
+          where: { id: accountId },
+          data: {
+            balance: {
+              increment: balanceChange,
+            },
+          },
+        });
+      }
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/account/[id]");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+// export async function bulkDeleteTransactions(transactionIds) {
+//   try {
+//     const { userId } = await auth();
+//     if (!userId) throw new Error("Unauthorized");
+
+//     const user = await db.user.findUnique({
+//       where: { clerkUserId: userId },
+//     });
+
+//     if (!user) throw new Error("User not found");
+
+//     // Get transactions to calculate balance changes
+//     const transactions = await db.transaction.findMany({
+//       where: {
+//         id: { in: transactionIds },
+//         userId: user.id,
+//       },
+//     });
+
+//     // Group transactions by account to update balances
+//     const accountBalanceChanges = transactions.reduce((acc, transaction) => {
+//       const change =
+//         transaction.type === "EXPENSE"
+//           ? transaction.amount
+//           : -transaction.amount;
+//       acc[transaction.accountId] = (acc[transaction.accountId] || 0) + change;
+//       return acc;
+//     }, {});
+
+//     // Delete transactions and update account balances in a transaction
+//     await db.$transaction(async (tx) => {
+//       // Delete transactions
+//       await tx.transaction.deleteMany({
+//         where: {
+//           id: { in: transactionIds },
+//           userId: user.id,
+//         },
+//       });
+
+//       // Update account balances
+//       for (const [accountId, balanceChange] of Object.entries(
+//         accountBalanceChanges
+//       )) {
+//         await tx.account.update({
+//           where: { id: accountId },
+//           data: {
+//             balance: {
+//               increment: balanceChange,
+//             },
+//           },
+//         });
+//       }
+//     });
+
+//     revalidatePath("/dashboard");
+//     revalidatePath("/account/[id]");
+
+//     return { success: true };
+//   } catch (error) {
+//     return { success: false, error: error.message };
+//   }
+// }
