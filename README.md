@@ -196,4 +196,5 @@ Read about the Difference between the, setFilter((value)=>handleFilter(value)), 
 
  LEFT => Not rendering on real time, UI after deleted a record
  If the API Fails why not error useEffect works?
- Resolve Bug to delete many transactions -> after resolving bug see that why different fn call use for delete transaction one with deleteFn and other bulkDelete
+ Resolve Bug to delete many transactions 
+  ->after resolving bug see that why different fn call use for delete transaction one with deleteFn and other bulkDelete

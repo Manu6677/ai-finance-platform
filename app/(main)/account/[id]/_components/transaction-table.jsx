@@ -7,8 +7,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -98,33 +96,11 @@ const TransactionTable = ({ transaction }) => {
   }, [deleted, deleteLoading]);
 
   useEffect(() => {
+    console.log(error);
     if (error) {
-      toast.error(error.message || "failed to create a new account");
+      toast.error("Can not delete a transaction");
     }
   }, [error]);
-
-  // const {
-  //   loading: deleteLoading,
-  //   fn: deleteFn,
-  //   data: deleted,
-  // } = useFetch(bulkDeleteTransactions);
-
-  // const handleBulkDelete = async () => {
-  //   if (
-  //     !window.confirm(
-  //       `Are you sure you want to delete ${selectedIds.length} transactions?`
-  //     )
-  //   )
-  //     return;
-
-  //   deleteFn(selectedIds);
-  // };
-
-  // useEffect(() => {
-  //   if (deleted && !deleteLoading) {
-  //     toast.error("Transactions deleted successfully");
-  //   }
-  // }, [deleted, deleteLoading]);
 
   const filteredAndSortedTransaction = useMemo(() => {
     let result = [...transaction];
