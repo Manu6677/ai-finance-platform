@@ -15,7 +15,7 @@ async function DashboardPage() {
   ]);
 
   const defaultAccount = accounts?.find((account) => account.isDefault);
-  console.log("defaultAccount", defaultAccount);
+  // console.log("defaultAccount", defaultAccount);
 
   let budgetData = null;
   if (defaultAccount) {
